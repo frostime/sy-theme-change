@@ -1,16 +1,16 @@
 {
   "name": "sy-theme-change",
   "author": "frostime",
-  "url": "https://github.com/siyuan-note/plugin-sample-vite-svelte",
+  "url": "https://github.com/frostime/sy-theme-change",
   "version": "0.0.1",
   "minAppVersion": "2.8.9",
   "displayName": {
     "en_US": "Theme Change",
-    "zh_CN": "更换主题"
+    "zh_CN": "切换主题"
   },
   "description": {
-    "en_US": "SiYuan plugin sample with vite and svelte",
-    "zh_CN": "使用 vite 和 svelte 开发的思源插件样例"
+    "en_US": "Quickly change the theme of SiYuan",
+    "zh_CN": "一年逛两次海澜之家, 思源的衣柜 ～(￣▽￣～)(～￣▽￣)～"
   },
   "readme": {
     "en_US": "README.md",
