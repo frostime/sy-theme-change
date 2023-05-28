@@ -47,9 +47,9 @@ export default class ThemeChangePlugin extends Plugin {
             menu.fullscreen();
         } else {
             menu.open({
-                x: rect.right,
+                x: rect.left,
                 y: rect.bottom,
-                isLeft: true,
+                isLeft: false,
             });
         }
     }
