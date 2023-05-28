@@ -11,7 +11,7 @@ export default class ThemeChangePlugin extends Plugin {
     onload() {
         const topBarElement = this.addTopBar({
             icon: svg,
-            title: "主题切换",
+            title: this.i18n.title,
             callback: (event: MouseEvent) => {
                 this.showThemesMenu(topBarElement.getBoundingClientRect());
             }
@@ -39,7 +39,7 @@ export default class ThemeChangePlugin extends Plugin {
         }
         menu.addSeparator()
         menu.addItem({
-                label: '试试手气~',
+                label: this.i18n.random,
                 icon: 'iconRefresh',
                 click: () => this.random(mode),
         });

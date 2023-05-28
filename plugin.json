@@ -2,8 +2,8 @@
   "name": "sy-theme-change",
   "author": "frostime",
   "url": "https://github.com/siyuan-note/plugin-sample-vite-svelte",
-  "version": "0.0.6",
-  "minAppVersion": "2.9.0",
+  "version": "0.0.1",
+  "minAppVersion": "2.8.9",
   "displayName": {
     "en_US": "Theme Change",
     "zh_CN": "更换主题"
