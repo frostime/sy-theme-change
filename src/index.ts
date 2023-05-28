@@ -23,9 +23,15 @@ export default class ThemeChangePlugin extends Plugin {
         const appearance = SIYUAN.config.appearance;
         const mode = appearance.mode === 0 ? 'light' : 'dark';
         const themes: string[] = mode === 'light' ? appearance.lightThemes : appearance.darkThemes;
+        const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
         for (const theme of themes) {
+            let icon = null;
+            if (theme === current) {
+                icon = 'iconSelect';
+            }
             menu.addItem({
                 label: theme,
+                icon: icon,
                 click: () => {
                     this.useTheme(theme, mode);
                 }
