@@ -31,6 +31,12 @@ export default class ThemeChangePlugin extends Plugin {
                 }
             });
         }
+        menu.addSeparator()
+        menu.addItem({
+                label: '试试手气~',
+                icon: 'iconRefresh',
+                click: () => this.random(mode),
+        });
         if (isMobile()) {
             menu.fullscreen();
         } else {
@@ -57,5 +63,21 @@ export default class ThemeChangePlugin extends Plugin {
             obj.themeDark = theme;
         }
         request('/api/setting/setAppearance', obj).then(() => window.location.reload());
+    }
+
+    private random(mode: string) {
+        const appearance = SIYUAN.config.appearance;
+        const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
+        const themes = mode === 'light' ? [...appearance.lightThemes] : [...appearance.darkThemes];
+        for (let i = 0; i < themes.length; i++) {
+            if (themes[i] === current) {
+                themes.splice(i, 1);
+            }
+        }
+        if (themes.length === 0) {
+            return;
+        }
+        const r = Math.floor(Math.random() * themes.length)
+        this.useTheme(themes[r], mode);
     }
 }
