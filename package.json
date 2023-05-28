@@ -1,5 +1,5 @@
 {
-  "name": "plugin-sample-vite-svelte",
+  "name": "sy-theme-change",
   "version": "0.0.6",
   "type": "module",
   "description": "",
@@ -19,7 +19,6 @@
     "minimist": "^1.2.8",
     "rollup-plugin-livereload": "^2.0.5",
     "sass": "^1.62.1",
-    "siyuan": "^0.7.1",
     "ts-node": "^10.9.1",
     "typescript": "^5.0.4",
     "vite": "^4.3.7",
