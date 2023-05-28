@@ -14,7 +14,8 @@ export default class ThemeChangePlugin extends Plugin {
             title: this.i18n.title,
             callback: (event: MouseEvent) => {
                 this.showThemesMenu(topBarElement.getBoundingClientRect());
-            }
+            },
+            position: "right"
         });
     }
 
