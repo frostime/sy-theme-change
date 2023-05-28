@@ -5,8 +5,8 @@
   "version": "0.0.6",
   "minAppVersion": "2.9.0",
   "displayName": {
-    "en_US": "Plugin sample with vite and svelte",
-    "zh_CN": "插件样例 vite + svelte 版"
+    "en_US": "Theme Change",
+    "zh_CN": "更换主题"
   },
   "description": {
     "en_US": "SiYuan plugin sample with vite and svelte",
