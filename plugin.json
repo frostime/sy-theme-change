@@ -2,8 +2,7 @@
   "name": "sy-theme-change",
   "author": "frostime",
   "url": "https://github.com/frostime/sy-theme-change",
-  "version": "0.0.1",
-  "minAppVersion": "2.8.8",
+  "version": "0.0.2",
   "displayName": {
     "en_US": "Theme Change",
     "zh_CN": "切换主题"
