@@ -56,7 +56,7 @@ jobs:
               id: regex-match
               with:
                 text: ${{ github.ref_name }}
-                regex: '^v\d+.\d+.\d+(-\w+)'
+                regex: '^v\d+\.\d+\.\d+(-\w+)'
 
             - name: Release
               uses: ncipollo/release-action@v1
