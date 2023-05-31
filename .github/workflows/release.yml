@@ -3,7 +3,7 @@ name: Create Release on Tag Push
 on:
     push:
         tags:
-            - "^v[0-9]+\\.[0-9]+\\.[0-9]+(-(dev|patch|test)[0-9]*)?$"
+            - "^v\\d+\\.\\d++\\.\\d+(-\\w+)?"
 
 jobs:
     build:
