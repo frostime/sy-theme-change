@@ -46,14 +46,31 @@ jobs:
 
             # Install dependencies
             - name: Install dependencies
-              run: pnpm install
+              run: pnpm install --no-frozen-lockfile
 
             # Build for production, 这一步会生成一个 package.zip
             - name: Build for production
               run: pnpm build
 
+            - uses: actions-ecosystem/action-regex-match@v2
+              id: regex-match
+              with:
+                text: ${{ github.ref_name }}
+                regex: '^v\d+.\d+.\d+(\.\w+)'
+
             - name: Release
               uses: ncipollo/release-action@v1
+              if: ${{ steps.regex-match.outputs.match == '' }}
+              with:
+                  allowUpdates: true
+                  artifactErrorsFailBuild: true
+                  artifacts: 'package.zip'
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  prerelease: false
+
+            - name: Prerelease
+              uses: ncipollo/release-action@v1
+              if: ${{ steps.regex-match.outputs.match != '' }}
               with:
                   allowUpdates: true
                   artifactErrorsFailBuild: true
