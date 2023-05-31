@@ -4,6 +4,8 @@
   "url": "https://github.com/frostime/sy-theme-change",
   "version": "0.0.2-patch",
   "minAppVersion": "2.8.10",
+  "backends": ["all"],
+  "frontends": ["desktop", "desktop-window", "browser-desktop", "browser-mobile"],
   "displayName": {
     "en_US": "Theme Change",
     "zh_CN": "切换主题"

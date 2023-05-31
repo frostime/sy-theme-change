@@ -1,4 +1,4 @@
-import { Plugin, Menu, isMobile } from "siyuan";
+import { Plugin, Menu } from "siyuan";
 import { svg } from "./const";
 import { request } from "./api";
 import "./index.scss";
@@ -44,15 +44,11 @@ export default class ThemeChangePlugin extends Plugin {
                 icon: 'iconRefresh',
                 click: () => this.random(mode),
         });
-        if (isMobile()) {
-            menu.fullscreen();
-        } else {
-            menu.open({
-                x: rect.left,
-                y: rect.bottom,
-                isLeft: false,
-            });
-        }
+        menu.open({
+            x: rect.left,
+            y: rect.bottom,
+            isLeft: false,
+        });
     }
 
     private useTheme(theme: string, mode: string) {
