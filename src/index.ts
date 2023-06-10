@@ -1,6 +1,6 @@
-import { Plugin, Menu } from "siyuan";
+import { Plugin, Menu, getFrontend } from "siyuan";
 import { svg } from "./const";
-import { request } from "./api";
+import { request, getInstalledTheme } from "./api";
 import "./index.scss";
 
 declare global {
@@ -11,10 +11,50 @@ declare global {
 
 
 const SIYUAN = window.siyuan;
+const Lang = SIYUAN.config.lang;
+
+interface Theme {
+    displayName: {[key: string]: string};
+    name: string;
+}
+
+class Themes {
+    themes: Theme[] = [];
+    name2displayName: {[key: string]: string} = {};
+    displayName2name: {[key: string]: string} = {};
+
+    async updateThemes() {
+        this.themes = [];
+        this.name2displayName = {};
+        this.displayName2name = {};
+
+        let frontend = getFrontend();
+        let data = await getInstalledTheme(frontend);
+        let packages = data.packages;
+        for (let pkg of packages) {
+            let theme = {
+                displayName: pkg.displayName,
+                name: pkg.name
+            }
+            this.themes.push(theme);
+            let displayName = pkg.displayName[Lang];
+
+            displayName = displayName ?? pkg.displayName['default'];
+            this.name2displayName[pkg.name] = displayName;
+            this.displayName2name[displayName] = pkg.name;
+        }
+
+        console.log(this.themes);
+        console.log(this.name2displayName);
+    }
+}
+
 
 export default class ThemeChangePlugin extends Plugin {
 
-    onload() {
+    themes: Themes;
+
+    async onload() {
         const topBarElement = this.addTopBar({
             icon: svg,
             title: this.i18n.title,
@@ -23,6 +63,8 @@ export default class ThemeChangePlugin extends Plugin {
             },
             position: "right"
         });
+        this.themes = new Themes();
+        await this.themes.updateThemes();
     }
 
     showThemesMenu(rect: DOMRect) {

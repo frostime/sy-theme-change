@@ -14,3 +14,10 @@ export async function request(url: string, data: any) {
     let res = response.code === 0 ? response.data : null;
     return res;
 }
+
+export async function getInstalledTheme(frontend: string) {
+    let data = {
+        frontend: frontend,
+    }
+    return request('api/bazaar/getInstalledTheme', data);
+}
