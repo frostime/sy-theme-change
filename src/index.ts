@@ -19,32 +19,20 @@ interface Theme {
 }
 
 class Themes {
-    themes: Theme[] = [];
     name2displayName: {[key: string]: string} = {};
-    displayName2name: {[key: string]: string} = {};
 
     async updateThemes() {
-        this.themes = [];
         this.name2displayName = {};
-        this.displayName2name = {};
 
         let frontend = getFrontend();
         let data = await getInstalledTheme(frontend);
         let packages = data.packages;
         for (let pkg of packages) {
-            let theme = {
-                displayName: pkg.displayName,
-                name: pkg.name
-            }
-            this.themes.push(theme);
             let displayName = pkg.displayName[Lang];
-
             displayName = displayName ?? pkg.displayName['default'];
             this.name2displayName[pkg.name] = displayName;
-            this.displayName2name[displayName] = pkg.name;
         }
 
-        console.log(this.themes);
         console.log(this.name2displayName);
     }
 
