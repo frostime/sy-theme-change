@@ -1,4 +1,5 @@
 import fs from 'fs';
+import http from 'node:http';
 import readline  from 'node:readline';
 
 
@@ -8,32 +9,57 @@ import readline  from 'node:readline';
 //请在这里填写你的 "workspace/data/plugins" 目录
 let targetDir = '';
 //Like this
-// const targetDir = `H:\\SiYuanDevSpace\\data\\plugins`;
+// let targetDir = `H:\\SiYuanDevSpace\\data\\plugins`;
 //********************************************************************************************
 
-const log = console.log;
+const log = (info) => console.log(`\x1B[36m%s\x1B[0m`, info);
+const error = (info) => console.log(`\x1B[31m%s\x1B[0m`, info);
+
+let POST_HEADER = {
+    // "Authorization": `Token ${token}`,
+    "Content-Type": "application/json",
+}
+
+async function myfetch(url, options) {
+    //使用 http 模块，从而兼容那些不支持 fetch 的 nodejs 版本
+    return new Promise((resolve, reject) => {
+        let req = http.request(url, options, (res) => {
+            let data = '';
+            res.on('data', (chunk) => {
+                data += chunk;
+            });
+            res.on('end', () => {
+                resolve({
+                    ok: true,
+                    status: res.statusCode,
+                    json: () => JSON.parse(data)
+                });
+            });
+        });
+        req.on('error', (e) => {
+            reject(e);
+        });
+        req.end();
+    });
+}
 
 async function getSiYuanDir() {
     let url = 'http://127.0.0.1:6806/api/system/getWorkspaces';
-    let header = {
-        // "Authorization": `Token ${token}`,
-        "Content-Type": "application/json",
-    }
     let conf = {};
     try {
-        let response = await fetch(url, {
+        let response = await myfetch(url, {
             method: 'POST',
-            headers: header
+            headers: POST_HEADER
         });
         if (response.ok) {
             conf = await response.json();
         } else {
-            log(`HTTP-Error: ${response.status}`);
+            error(`HTTP-Error: ${response.status}`);
             return null;
         }
     } catch (e) {
-        log("Error:", e);
-        log("Please make sure SiYuan is running!!!");
+        error("Error:", e);
+        error("Please make sure SiYuan is running!!!");
         return null;
     }
     return conf.data;
@@ -78,40 +104,69 @@ if (targetDir === '') {
 
 //Check
 if (!fs.existsSync(targetDir)) {
-    log(`Failed! plugin directory not exists: "${targetDir}"`);
-    log(`Please set the plugin directory in scripts/make_dev_link.js`);
+    error(`Failed! plugin directory not exists: "${targetDir}"`);
+    error(`Please set the plugin directory in scripts/make_dev_link.js`);
     process.exit(1);
 }
 
 
 //check if plugin.json exists
 if (!fs.existsSync('./plugin.json')) {
-    console.error('Failed! plugin.json not found');
-    process.exit(1);
+    //change dir to parent
+    process.chdir('../');
+    if (!fs.existsSync('./plugin.json')) {
+        error('Failed! plugin.json not found');
+        process.exit(1);
+    }
 }
 
 //load plugin.json
 const plugin = JSON.parse(fs.readFileSync('./plugin.json', 'utf8'));
 const name = plugin?.name;
 if (!name || name === '') {
-    log('Failed! Please set plugin name in plugin.json');
+    error('Failed! Please set plugin name in plugin.json');
     process.exit(1);
 }
 
 //dev directory
-const devDir = `./dev`;
+const devDir = `${process.cwd()}/dev`;
 //mkdir if not exists
 if (!fs.existsSync(devDir)) {
     fs.mkdirSync(devDir);
 }
 
+function cmpPath(path1, path2) {
+    path1 = path1.replace(/\\/g, '/');
+    path2 = path2.replace(/\\/g, '/');
+    // sepertor at tail
+    if (path1[path1.length - 1] !== '/') {
+        path1 += '/';
+    }
+    if (path2[path2.length - 1] !== '/') {
+        path2 += '/';
+    }
+    return path1 === path2;
+}
+
 const targetPath = `${targetDir}/${name}`;
 //如果已经存在，就退出
 if (fs.existsSync(targetPath)) {
-    log(`Failed! Target directory  ${targetPath} already exists`);
+    let isSymbol = fs.lstatSync(targetPath).isSymbolicLink();
+
+    if (isSymbol) {
+        let srcPath = fs.readlinkSync(targetPath);
+        
+        if (cmpPath(srcPath, devDir)) {
+            log(`Good! ${targetPath} is already linked to ${devDir}`);
+        } else {
+            error(`Error! Already exists symbolic link ${targetPath}\nBut it links to ${srcPath}`);
+        }
+    } else {
+        error(`Failed! ${targetPath} already exists and is not a symbolic link`);
+    }
+
 } else {
     //创建软链接
-    fs.symlinkSync(`${process.cwd()}/dev`, targetPath, 'junction');
+    fs.symlinkSync(devDir, targetPath, 'junction');
     log(`Done! Created symlink ${targetPath}`);
 }
-
