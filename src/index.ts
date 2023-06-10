@@ -25,7 +25,10 @@ class Themes {
         let packages = data.packages;
         for (let pkg of packages) {
             let displayName = pkg.displayName[Lang];
-            displayName = displayName ?? pkg.displayName['default'];
+            if (displayName === undefined || displayName === null || displayName === '') {
+                displayName = pkg.displayName['default'];
+            }
+            console.log(pkg.displayName)
             this.name2displayName[pkg.name] = displayName;
         }
     }
