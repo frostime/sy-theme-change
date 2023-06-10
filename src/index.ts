@@ -13,10 +13,6 @@ declare global {
 const SIYUAN = window.siyuan;
 const Lang = SIYUAN.config.lang;
 
-interface Theme {
-    displayName: {[key: string]: string};
-    name: string;
-}
 
 class Themes {
     name2displayName: {[key: string]: string} = {};
@@ -32,8 +28,6 @@ class Themes {
             displayName = displayName ?? pkg.displayName['default'];
             this.name2displayName[pkg.name] = displayName;
         }
-
-        console.log(this.name2displayName);
     }
 
     getDisplayName(name: string) {
@@ -54,7 +48,7 @@ export default class ThemeChangePlugin extends Plugin {
         const topBarElement = this.addTopBar({
             icon: svg,
             title: this.i18n.title,
-            callback: (event: MouseEvent) => {
+            callback: () => {
                 this.showThemesMenu(topBarElement.getBoundingClientRect());
             },
             position: "right"
