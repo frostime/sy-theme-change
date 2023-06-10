@@ -3,7 +3,13 @@ import { svg } from "./const";
 import { request } from "./api";
 import "./index.scss";
 
-// @ts-ignore
+declare global {
+    interface Window {
+        siyuan: any;
+    }
+}
+
+
 const SIYUAN = window.siyuan;
 
 export default class ThemeChangePlugin extends Plugin {
