@@ -7,6 +7,7 @@ specifiers:
   minimist: ^1.2.8
   rollup-plugin-livereload: ^2.0.5
   sass: ^1.62.1
+  siyuan: ^0.7.3
   ts-node: ^10.9.1
   typescript: ^5.0.4
   vite: ^4.3.7
@@ -20,6 +21,7 @@ devDependencies:
   minimist: 1.2.8
   rollup-plugin-livereload: 2.0.5
   sass: 1.62.1
+  siyuan: 0.7.3
   ts-node: 10.9.1_wanalbxtsppgcqemtlzr6bzfo4
   typescript: 5.0.4
   vite: 4.3.9_kxkosmzevect5blmp7ly2aqtpa
@@ -700,6 +702,10 @@ packages:
 
   /setimmediate/1.0.5:
     resolution: {integrity: sha512-MATJdZp8sLqDl/68LfQmbP8zKPLQNV6BIZoIgrscFDQ+RsvK/BxeDQOgyxKKoh0y/8h3BqVFnCqQ/gd+reiIXA==}
+    dev: true
+
+  /siyuan/0.7.3:
+    resolution: {integrity: sha512-LyuMvrKwbZrjak5qvoXLoSV3RDn3XWgqexf6kif6rGz2KTkWso6f4pkTp5Cj3yooik8hYnqNjNgxsdFMwQ9Y4g==}
     dev: true
 
   /source-map-js/1.0.2:

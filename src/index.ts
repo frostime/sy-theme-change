@@ -1,22 +1,60 @@
-import { Plugin, Menu } from "siyuan";
+import { Plugin, Menu, getFrontend } from "siyuan";
 import { svg } from "./const";
-import { request } from "./api";
+import { request, getInstalledTheme } from "./api";
 import "./index.scss";
 
-// @ts-ignore
+declare global {
+    interface Window {
+        siyuan: any;
+    }
+}
+
+
 const SIYUAN = window.siyuan;
+const Lang = SIYUAN.config.lang;
+
+
+class Themes {
+    name2displayName: {[key: string]: string} = {};
+
+    async updateThemes() {
+        this.name2displayName = {};
+
+        let frontend = getFrontend();
+        let data = await getInstalledTheme(frontend);
+        let packages = data.packages;
+        for (let pkg of packages) {
+            let displayName = pkg.displayName[Lang];
+            displayName = displayName ?? pkg.displayName['default'];
+            this.name2displayName[pkg.name] = displayName;
+        }
+    }
+
+    getDisplayName(name: string) {
+        let displayName = this.name2displayName[name];
+        if (displayName === undefined || displayName === null || displayName === '') {
+            displayName = name;
+        }
+        return displayName;
+    }
+}
+
 
 export default class ThemeChangePlugin extends Plugin {
 
-    onload() {
+    themes: Themes;
+
+    async onload() {
         const topBarElement = this.addTopBar({
             icon: svg,
             title: this.i18n.title,
-            callback: (event: MouseEvent) => {
+            callback: () => {
                 this.showThemesMenu(topBarElement.getBoundingClientRect());
             },
             position: "right"
         });
+        this.themes = new Themes();
+        await this.themes.updateThemes();
     }
 
     showThemesMenu(rect: DOMRect) {
@@ -31,7 +69,7 @@ export default class ThemeChangePlugin extends Plugin {
                 icon = 'iconSelect';
             }
             menu.addItem({
-                label: theme,
+                label: this.themes.getDisplayName(theme),
                 icon: icon,
                 click: () => {
                     this.useTheme(theme, mode);
