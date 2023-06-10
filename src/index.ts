@@ -47,6 +47,14 @@ class Themes {
         console.log(this.themes);
         console.log(this.name2displayName);
     }
+
+    getDisplayName(name: string) {
+        let displayName = this.name2displayName[name];
+        if (displayName === undefined || displayName === null || displayName === '') {
+            displayName = name;
+        }
+        return displayName;
+    }
 }
 
 
@@ -79,7 +87,7 @@ export default class ThemeChangePlugin extends Plugin {
                 icon = 'iconSelect';
             }
             menu.addItem({
-                label: theme,
+                label: this.themes.getDisplayName(theme),
                 icon: icon,
                 click: () => {
                     this.useTheme(theme, mode);
