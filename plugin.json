@@ -2,7 +2,7 @@
   "name": "sy-theme-change",
   "author": "frostime",
   "url": "https://github.com/frostime/sy-theme-change",
-  "version": "0.0.2-patch",
+  "version": "0.0.3",
   "minAppVersion": "2.8.10",
   "backends": ["all"],
   "frontends": ["desktop", "desktop-window", "browser-desktop", "browser-mobile"],
@@ -20,6 +20,7 @@
   },
   "funding": {
     "custom": [
+      "https://afdian.net/a/frostime"
     ]
   }
 }
