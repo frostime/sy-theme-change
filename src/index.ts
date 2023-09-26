@@ -1,6 +1,14 @@
-import { Plugin, Menu, getFrontend } from "siyuan";
+/*
+ * Copyright (c) 2023 by Yp Z (frostime). All Rights Reserved.
+ * @Author       : Yp Z
+ * @Date         : 2023-09-27 00:34:28
+ * @FilePath     : /src/index.ts
+ * @LastEditTime : 2023-09-27 01:41:57
+ * @Description  : 
+ */
+import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
 import { svg } from "./const";
-import { request, getInstalledTheme } from "./api";
+import { request, getInstalledTheme, getBazaarTheme, installBazaarTheme } from "./api";
 import "./index.scss";
 
 import { changelog } from "sy-plugin-changelog";
@@ -49,6 +57,7 @@ export default class ThemeChangePlugin extends Plugin {
 
     themes: Themes;
     isMobile: boolean;
+    bazzarThemes: ITheme[] = [];
 
     async onload() {
         const frontEnd = getFrontend();
@@ -68,6 +77,10 @@ export default class ThemeChangePlugin extends Plugin {
                 width: "45rem",
                 height: "25rem",
             });
+        });
+        getBazaarTheme().then((data) => {
+            this.bazzarThemes = data ?? [];
+            console.log(this.bazzarThemes)
         });
     }
 
@@ -95,6 +108,21 @@ export default class ThemeChangePlugin extends Plugin {
                 label: this.i18n.random,
                 icon: 'iconRefresh',
                 click: () => this.random(mode),
+        });
+        menu.addItem({
+            label: "安装主题",
+            type: "submenu",
+            submenu: this.bazzarThemes.map((theme: ITheme) => {
+                return {
+                    label: theme.name,
+                    click: () => {
+                        installBazaarTheme(theme).then((ans) => {
+                            console.info("安装主题", ans);
+                            this.themes.updateThemes();
+                        });
+                    }
+                }
+            })
         });
         if (this.isMobile) {
             menu.fullscreen();

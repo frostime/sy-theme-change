@@ -9,6 +9,26 @@
 import { fetchSyncPost, IWebSocketData } from "siyuan";
 
 
+// api/bazaar/getBazaarTheme
+export async function getBazaarTheme(): Promise<ITheme[] | null> {
+    let data = await request('api/bazaar/getBazaarTheme', {});
+    return data?.packages ?? null;
+}
+
+// api/bazaar/installBazaarTheme
+export async function installBazaarTheme(theme: ITheme): Promise<boolean> {
+    let payload = {
+        frontend: "desktop",
+        mode: "light" in theme.modes ? 0 : 1,
+        packageName: theme.name,
+        repoHash: theme.repoHash,
+        repoURL: theme.repoURL
+    }
+    let data = await request('api/bazaar/installBazaarTheme', payload);
+    return data?.success ?? false;
+}
+
+
 export async function request(url: string, data: any) {
     let response: IWebSocketData = await fetchSyncPost(url, data);
     let res = response.code === 0 ? response.data : null;
