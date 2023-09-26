@@ -3,6 +3,8 @@ import { svg } from "./const";
 import { request, getInstalledTheme } from "./api";
 import "./index.scss";
 
+import { changelog } from "sy-plugin-changelog";
+
 declare global {
     interface Window {
         siyuan: any;
@@ -46,8 +48,11 @@ class Themes {
 export default class ThemeChangePlugin extends Plugin {
 
     themes: Themes;
+    isMobile: boolean;
 
     async onload() {
+        const frontEnd = getFrontend();
+        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
         const topBarElement = this.addTopBar({
             icon: svg,
             title: this.i18n.title,
@@ -58,6 +63,12 @@ export default class ThemeChangePlugin extends Plugin {
         });
         this.themes = new Themes();
         await this.themes.updateThemes();
+        changelog(this, 'i18n/changelog.md').then((result) => {
+            result.Dialog.setSize({
+                width: "45rem",
+                height: "17rem",
+            });
+        });
     }
 
     showThemesMenu(rect: DOMRect) {
@@ -85,11 +96,15 @@ export default class ThemeChangePlugin extends Plugin {
                 icon: 'iconRefresh',
                 click: () => this.random(mode),
         });
-        menu.open({
-            x: rect.left,
-            y: rect.bottom,
-            isLeft: false,
-        });
+        if (this.isMobile) {
+            menu.fullscreen();
+        } else {
+            menu.open({
+                x: rect.left,
+                y: rect.bottom,
+                isLeft: false,
+            });
+        }
     }
 
     private useTheme(theme: string, mode: string) {

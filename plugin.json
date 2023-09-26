@@ -2,10 +2,10 @@
   "name": "sy-theme-change",
   "author": "frostime",
   "url": "https://github.com/frostime/sy-theme-change",
-  "version": "0.0.3",
+  "version": "0.1.0",
   "minAppVersion": "2.9.0",
   "backends": ["all"],
-  "frontends": ["desktop", "desktop-window", "browser-desktop", "browser-mobile"],
+  "frontends": ["all"],
   "displayName": {
     "en_US": "Theme Change",
     "zh_CN": "切换主题"

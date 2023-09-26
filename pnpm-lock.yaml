@@ -1,5 +1,10 @@
 lockfileVersion: '6.0'
 
+dependencies:
+  sy-plugin-changelog:
+    specifier: ^0.0.7
+    version: 0.0.7
+
 devDependencies:
   '@types/node':
     specifier: ^20.2.0
@@ -728,6 +733,10 @@ packages:
     dependencies:
       safe-buffer: 5.1.2
     dev: true
+
+  /sy-plugin-changelog@0.0.7:
+    resolution: {integrity: sha512-2xiSeiyp1OzMW+iuYGcQ8R+/3cxf6a4DEXwGxWXhdvDp6MdPJYsgyza/M++YoLP7B0TdDQneVWyMMMCA4y4vQg==}
+    dev: false
 
   /to-regex-range@5.0.1:
     resolution: {integrity: sha512-65P7iz6X5yEr1cwcgvQxbbIw7Uk3gOy5dIdtZ4rDveLqhrdJP+Li/Hx6tyK0NEb+2GCyneCMJiGqrADCSNk8sQ==}
