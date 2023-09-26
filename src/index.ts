@@ -64,9 +64,9 @@ export default class ThemeChangePlugin extends Plugin {
         this.themes = new Themes();
         await this.themes.updateThemes();
         changelog(this, 'i18n/changelog.md').then((result) => {
-            result.Dialog.setSize({
+            result?.Dialog?.setSize({
                 width: "45rem",
-                height: "17rem",
+                height: "25rem",
             });
         });
     }
