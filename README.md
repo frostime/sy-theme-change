@@ -2,4 +2,7 @@
 
 ## Function description
 
-Quickly change the theme of Siyuan.
+- Quickly change the theme of Siyuan.
+- Support mobile device
+- Quickly install theme
+

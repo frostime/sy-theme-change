@@ -1,7 +1,17 @@
-import { Plugin, Menu, getFrontend } from "siyuan";
+/*
+ * Copyright (c) 2023 by Yp Z (frostime). All Rights Reserved.
+ * @Author       : Yp Z
+ * @Date         : 2023-09-27 00:34:28
+ * @FilePath     : /src/index.ts
+ * @LastEditTime : 2023-09-27 10:08:11
+ * @Description  : 
+ */
+import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
 import { svg } from "./const";
-import { request, getInstalledTheme } from "./api";
+import { request, getInstalledTheme, getBazaarTheme, installBazaarTheme } from "./api";
 import "./index.scss";
+
+import { changelog } from "sy-plugin-changelog";
 
 declare global {
     interface Window {
@@ -46,8 +56,12 @@ class Themes {
 export default class ThemeChangePlugin extends Plugin {
 
     themes: Themes;
+    isMobile: boolean;
+    bazzarThemes: ITheme[] = [];
 
     async onload() {
+        const frontEnd = getFrontend();
+        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
         const topBarElement = this.addTopBar({
             icon: svg,
             title: this.i18n.title,
@@ -58,6 +72,16 @@ export default class ThemeChangePlugin extends Plugin {
         });
         this.themes = new Themes();
         await this.themes.updateThemes();
+        changelog(this, 'i18n/changelog.md').then((result) => {
+            result?.Dialog?.setSize({
+                width: "45rem",
+                height: "25rem",
+            });
+        });
+        getBazaarTheme().then((data) => {
+            this.bazzarThemes = data ?? [];
+            console.log(this.bazzarThemes)
+        });
     }
 
     showThemesMenu(rect: DOMRect) {
@@ -81,15 +105,36 @@ export default class ThemeChangePlugin extends Plugin {
         }
         menu.addSeparator()
         menu.addItem({
-                label: this.i18n.random,
-                icon: 'iconRefresh',
-                click: () => this.random(mode),
+            label: this.i18n.random,
+            icon: 'iconRefresh',
+            click: () => this.random(mode),
         });
-        menu.open({
-            x: rect.left,
-            y: rect.bottom,
-            isLeft: false,
+        menu.addItem({
+            label: this.i18n.install,
+            type: "submenu",
+            submenu: this.bazzarThemes.map((theme: ITheme) => {
+                return {
+                    label: theme.name,
+                    click: () => {
+                        installBazaarTheme(theme).then(async (ans) => {
+                            console.info("Install theme", ans);
+                            this.themes.updateThemes().then(() => {
+                                showMessage(this.i18n.installDone);
+                            });
+                        });
+                    }
+                }
+            })
         });
+        if (this.isMobile) {
+            menu.fullscreen();
+        } else {
+            menu.open({
+                x: rect.left,
+                y: rect.bottom,
+                isLeft: false,
+            });
+        }
     }
 
     private useTheme(theme: string, mode: string) {

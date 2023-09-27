@@ -2,6 +2,14 @@
  * Copyright (c) 2023 frostime. All rights reserved.
  */
 
+type ThemeMode = "light" | "dark";
+interface ITheme {
+    name: string;
+    modes: ThemeMode[];
+    repoHash: string;
+    repoURL: string;
+}
+
 /**
  * Frequently used data structures in SiYuan
  */
