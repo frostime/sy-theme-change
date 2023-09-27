@@ -1,4 +1,6 @@
 {
     "title": "更换主题",
-    "random": "试试手气"
+    "random": "试试手气",
+    "install": "安装主题",
+    "installDone": "安装完成, 重载后生效"
 }

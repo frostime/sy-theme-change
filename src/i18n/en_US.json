@@ -1,4 +1,6 @@
 {
     "title": "Change theme",
-    "random": "Random"
+    "random": "Random",
+    "install": "Install theme",
+    "installDone": "Installed"
 }

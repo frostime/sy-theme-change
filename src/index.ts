@@ -3,7 +3,7 @@
  * @Author       : Yp Z
  * @Date         : 2023-09-27 00:34:28
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-09-27 01:41:57
+ * @LastEditTime : 2023-09-27 10:08:11
  * @Description  : 
  */
 import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
@@ -105,20 +105,22 @@ export default class ThemeChangePlugin extends Plugin {
         }
         menu.addSeparator()
         menu.addItem({
-                label: this.i18n.random,
-                icon: 'iconRefresh',
-                click: () => this.random(mode),
+            label: this.i18n.random,
+            icon: 'iconRefresh',
+            click: () => this.random(mode),
         });
         menu.addItem({
-            label: "安装主题",
+            label: this.i18n.install,
             type: "submenu",
             submenu: this.bazzarThemes.map((theme: ITheme) => {
                 return {
                     label: theme.name,
                     click: () => {
-                        installBazaarTheme(theme).then((ans) => {
-                            console.info("安装主题", ans);
-                            this.themes.updateThemes();
+                        installBazaarTheme(theme).then(async (ans) => {
+                            console.info("Install theme", ans);
+                            this.themes.updateThemes().then(() => {
+                                showMessage(this.i18n.installDone);
+                            });
                         });
                     }
                 }
