@@ -3,7 +3,7 @@
  * @Author       : Yp Z
  * @Date         : 2023-09-27 00:34:28
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-09-27 10:08:11
+ * @LastEditTime : 2023-10-08 12:46:11
  * @Description  : 
  */
 import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
@@ -27,18 +27,19 @@ const Lang = SIYUAN.config.lang;
 class Themes {
     name2displayName: {[key: string]: string} = {};
 
-    async updateThemes() {
+    async updateThemes(packages?: any) {
         this.name2displayName = {};
 
-        let frontend = getFrontend();
-        let data = await getInstalledTheme(frontend);
-        let packages = data.packages;
+        if (!packages) {
+            let frontend = getFrontend();
+            packages = (await getInstalledTheme(frontend)).packages;
+        }
         for (let pkg of packages) {
             let displayName = pkg.displayName[Lang];
             if (displayName === undefined || displayName === null || displayName === '') {
                 displayName = pkg.displayName['default'];
             }
-            console.log(pkg.displayName)
+            console.debug(pkg.displayName)
             this.name2displayName[pkg.name] = displayName;
         }
     }
@@ -71,16 +72,17 @@ export default class ThemeChangePlugin extends Plugin {
             position: "right"
         });
         this.themes = new Themes();
-        await this.themes.updateThemes();
+        getBazaarTheme().then((data) => {
+            this.bazzarThemes = data ?? [];
+            this.themes.updateThemes(data);
+            console.debug(this.bazzarThemes)
+        });
+        // await this.themes.updateThemes();
         changelog(this, 'i18n/changelog.md').then((result) => {
             result?.Dialog?.setSize({
                 width: "45rem",
                 height: "25rem",
             });
-        });
-        getBazaarTheme().then((data) => {
-            this.bazzarThemes = data ?? [];
-            console.log(this.bazzarThemes)
         });
     }
 
@@ -103,6 +105,8 @@ export default class ThemeChangePlugin extends Plugin {
                 }
             });
         }
+        const allThemes = Array.from(new Set([...appearance.lightThemes, ...appearance.darkThemes]));
+        console.debug("All installed themes:", allThemes);
         menu.addSeparator()
         menu.addItem({
             label: this.i18n.random,
@@ -112,15 +116,19 @@ export default class ThemeChangePlugin extends Plugin {
         menu.addItem({
             label: this.i18n.install,
             type: "submenu",
-            submenu: this.bazzarThemes.map((theme: ITheme) => {
+            submenu: this.bazzarThemes.filter((theme: ITheme) => {
+                return !allThemes.includes(theme.name);
+            }).map((theme: ITheme) => {
+                // console.debug(theme);
                 return {
-                    label: theme.name,
+                    label: this.themes.getDisplayName(theme.name),
                     click: () => {
                         installBazaarTheme(theme).then(async (ans) => {
                             console.info("Install theme", ans);
-                            this.themes.updateThemes().then(() => {
-                                showMessage(this.i18n.installDone);
-                            });
+                            showMessage(this.i18n.installDone);
+                            // this.themes.updateThemes().then(() => {
+                            //     showMessage(this.i18n.installDone);
+                            // });
                         });
                     }
                 }
