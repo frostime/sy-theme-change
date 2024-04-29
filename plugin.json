@@ -2,7 +2,7 @@
   "name": "sy-theme-change",
   "author": "frostime",
   "url": "https://github.com/frostime/sy-theme-change",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "minAppVersion": "3.0.0",
   "backends": ["all"],
   "frontends": ["all"],

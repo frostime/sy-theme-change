@@ -3,7 +3,7 @@
  * @Author       : Yp Z
  * @Date         : 2023-09-27 00:34:28
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-03-26 13:57:57
+ * @LastEditTime : 2024-04-29 20:55:55
  * @Description  : 
  */
 import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
@@ -164,7 +164,7 @@ export default class ThemeChangePlugin extends Plugin {
         } else {
             obj.themeDark = theme;
         }
-        window?.destroyTheme();
+        globalThis?.destroyTheme && globalThis.destroyTheme();
         request('/api/setting/setAppearance', obj).then(() => {
             window.location.reload();
         });
