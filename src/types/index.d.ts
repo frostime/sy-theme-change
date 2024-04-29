@@ -72,3 +72,8 @@ type doOperation = {
     previousID: BlockId;
     retData: null;
 }
+
+
+interface Window {
+    destroyTheme: () => void;
+}

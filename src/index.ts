@@ -3,7 +3,7 @@
  * @Author       : Yp Z
  * @Date         : 2023-09-27 00:34:28
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2023-10-08 12:46:11
+ * @LastEditTime : 2024-03-26 13:57:57
  * @Description  : 
  */
 import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
@@ -11,7 +11,7 @@ import { svg } from "./const";
 import { request, getInstalledTheme, getBazaarTheme, installBazaarTheme } from "./api";
 import "./index.scss";
 
-import { changelog } from "sy-plugin-changelog";
+// import { changelog } from "sy-plugin-changelog";
 
 declare global {
     interface Window {
@@ -39,7 +39,7 @@ class Themes {
             if (displayName === undefined || displayName === null || displayName === '') {
                 displayName = pkg.displayName['default'];
             }
-            console.debug(pkg.displayName)
+            // console.debug(pkg.displayName)
             this.name2displayName[pkg.name] = displayName;
         }
     }
@@ -75,15 +75,15 @@ export default class ThemeChangePlugin extends Plugin {
         getBazaarTheme().then((data) => {
             this.bazzarThemes = data ?? [];
             this.themes.updateThemes(data);
-            console.debug(this.bazzarThemes)
+            // console.debug(this.bazzarThemes)
         });
         // await this.themes.updateThemes();
-        changelog(this, 'i18n/changelog.md').then((result) => {
-            result?.Dialog?.setSize({
-                width: "45rem",
-                height: "25rem",
-            });
-        });
+        // changelog(this, 'i18n/changelog.md').then((result) => {
+        //     result?.Dialog?.setSize({
+        //         width: "45rem",
+        //         height: "25rem",
+        //     });
+        // });
     }
 
     showThemesMenu(rect: DOMRect) {
@@ -92,6 +92,8 @@ export default class ThemeChangePlugin extends Plugin {
         const mode = appearance.mode === 0 ? 'light' : 'dark';
         const themes: string[] = mode === 'light' ? appearance.lightThemes : appearance.darkThemes;
         const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
+
+        //Switch theme
         for (const theme of themes) {
             let icon = null;
             if (theme === current) {
@@ -105,14 +107,17 @@ export default class ThemeChangePlugin extends Plugin {
                 }
             });
         }
+
         const allThemes = Array.from(new Set([...appearance.lightThemes, ...appearance.darkThemes]));
-        console.debug("All installed themes:", allThemes);
+        // console.debug("All installed themes:", allThemes);
         menu.addSeparator()
         menu.addItem({
             label: this.i18n.random,
             icon: 'iconRefresh',
             click: () => this.random(mode),
         });
+
+        //Install theme
         menu.addItem({
             label: this.i18n.install,
             type: "submenu",
@@ -159,7 +164,10 @@ export default class ThemeChangePlugin extends Plugin {
         } else {
             obj.themeDark = theme;
         }
-        request('/api/setting/setAppearance', obj).then(() => window.location.reload());
+        window?.destroyTheme();
+        request('/api/setting/setAppearance', obj).then(() => {
+            window.location.reload();
+        });
     }
 
     private random(mode: string) {
