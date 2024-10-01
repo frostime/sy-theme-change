@@ -3,7 +3,7 @@
  * @Author       : Yp Z
  * @Date         : 2023-09-27 00:34:28
  * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-04-29 20:55:55
+ * @LastEditTime : 2024-10-01 14:14:29
  * @Description  : 
  */
 import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
@@ -90,20 +90,20 @@ export default class ThemeChangePlugin extends Plugin {
         let menu: Menu = new Menu("ThemeChange");
         const appearance = SIYUAN.config.appearance;
         const mode = appearance.mode === 0 ? 'light' : 'dark';
-        const themes: string[] = mode === 'light' ? appearance.lightThemes : appearance.darkThemes;
+        const themes: {name: string; label: string}[] = mode === 'light' ? appearance.lightThemes : appearance.darkThemes;
         const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
 
         //Switch theme
         for (const theme of themes) {
             let icon = null;
-            if (theme === current) {
+            if (theme.name === current) {
                 icon = 'iconSelect';
             }
             menu.addItem({
-                label: this.themes.getDisplayName(theme),
+                label: this.themes.getDisplayName(theme.name),
                 icon: icon,
                 click: () => {
-                    this.useTheme(theme, mode);
+                    this.useTheme(theme.name, mode);
                 }
             });
         }
@@ -117,12 +117,14 @@ export default class ThemeChangePlugin extends Plugin {
             click: () => this.random(mode),
         });
 
+        const installedThemeNames = allThemes.map((theme) => theme.name);
+
         //Install theme
         menu.addItem({
             label: this.i18n.install,
             type: "submenu",
             submenu: this.bazzarThemes.filter((theme: ITheme) => {
-                return !allThemes.includes(theme.name);
+                return !installedThemeNames.includes(theme.name);
             }).map((theme: ITheme) => {
                 // console.debug(theme);
                 return {
@@ -131,9 +133,6 @@ export default class ThemeChangePlugin extends Plugin {
                         installBazaarTheme(theme).then(async (ans) => {
                             console.info("Install theme", ans);
                             showMessage(this.i18n.installDone);
-                            // this.themes.updateThemes().then(() => {
-                            //     showMessage(this.i18n.installDone);
-                            // });
                         });
                     }
                 }
@@ -150,21 +149,26 @@ export default class ThemeChangePlugin extends Plugin {
         }
     }
 
-    private useTheme(theme: string, mode: string) {
+    private useTheme(themeName: string, mode: string) {
         const appearance = SIYUAN.config.appearance;
         const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
-        if (theme === current) {
+        if (themeName === current) {
             return;
         }
         const obj = {
             ...SIYUAN.config.appearance,
         };
         if (mode === 'light') {
-            obj.themeLight = theme;
+            obj.themeLight = themeName;
         } else {
-            obj.themeDark = theme;
+            obj.themeDark = themeName;
         }
-        globalThis?.destroyTheme && globalThis.destroyTheme();
+        try {
+            //部分主题在 destroy 时会报错导致无法切换主题
+            globalThis?.destroyTheme && globalThis.destroyTheme();
+        } catch (e) {
+            console.warn("Some error occurred when destroy theme", e);
+        }
         request('/api/setting/setAppearance', obj).then(() => {
             window.location.reload();
         });
@@ -175,7 +179,7 @@ export default class ThemeChangePlugin extends Plugin {
         const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
         const themes = mode === 'light' ? [...appearance.lightThemes] : [...appearance.darkThemes];
         for (let i = 0; i < themes.length; i++) {
-            if (themes[i] === current) {
+            if (themes[i].name === current) {
                 themes.splice(i, 1);
             }
         }
@@ -183,6 +187,6 @@ export default class ThemeChangePlugin extends Plugin {
             return;
         }
         const r = Math.floor(Math.random() * themes.length)
-        this.useTheme(themes[r], mode);
+        this.useTheme(themes[r].name, mode);
     }
 }
