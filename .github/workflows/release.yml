@@ -13,24 +13,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - uses: actions-ecosystem/action-regex-match@v2
-        id: regex-match
-        with:
-          text: ${{ github.ref_name }}
-          regex: '^v\d+\.\d+\.\d+(-\w+)?'
-
       # Install Node.js
       - name: Install Node.js
-        if: ${{ steps.regex-match.outputs.match != '' }}
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 20
           registry-url: "https://registry.npmjs.org"
 
         # Install pnpm
       - name: Install pnpm
-        if: ${{ steps.regex-match.outputs.match != '' }}
-        uses: pnpm/action-setup@v2
+        uses: pnpm/action-setup@v4
         id: pnpm-install
         with:
           version: 8
@@ -38,7 +30,6 @@ jobs:
 
       # Get pnpm store directory
       - name: Get pnpm store directory
-        if: ${{ steps.regex-match.outputs.match != '' }}
         id: pnpm-cache
         shell: bash
         run: |
@@ -46,7 +37,6 @@ jobs:
 
       # Setup pnpm cache
       - name: Setup pnpm cache
-        if: ${{ steps.regex-match.outputs.match != '' }}
         uses: actions/cache@v3
         with:
           path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
@@ -56,16 +46,13 @@ jobs:
 
       # Install dependencies
       - name: Install dependencies
-        if: ${{ steps.regex-match.outputs.match != '' }}
-        run: pnpm install --no-frozen-lockfile
+        run: pnpm install
 
       # Build for production, 这一步会生成一个 package.zip
       - name: Build for production
-        if: ${{ steps.regex-match.outputs.match != '' }}
         run: pnpm build
 
       - name: Release
-        if: ${{ steps.regex-match.outputs.match != '' && steps.regex-match.outputs.group1 == '' }}
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
@@ -73,13 +60,3 @@ jobs:
           artifacts: "package.zip"
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: false
-
-      - name: Prerelease
-        if: ${{ steps.regex-match.outputs.match != '' && steps.regex-match.outputs.group1 != '' }}
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: "package.zip"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: true
