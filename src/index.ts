@@ -170,7 +170,8 @@ export default class ThemeChangePlugin extends Plugin {
             console.warn("Some error occurred when destroy theme", e);
         }
         request('/api/setting/setAppearance', obj).then(() => {
-            window.location.reload();
+            // window.location.reload();
+            fetch('/api/ui/reloadUI', { method: 'POST' });
         });
     }
 
