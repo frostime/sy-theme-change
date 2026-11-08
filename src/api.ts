@@ -1,43 +1,42 @@
-/**
- * Copyright (c) 2023 frostime. All rights reserved.
- * https://github.com/siyuan-note/plugin-sample-vite-svelte
- * 
- * See API Document in [API.md](https://github.com/siyuan-note/siyuan/blob/master/API.md)
- * API 文档见 [API_zh_CN.md](https://github.com/siyuan-note/siyuan/blob/master/API_zh_CN.md)
- */
+import { fetchSyncPost, getFrontend } from "siyuan";
 
-import { fetchSyncPost, IWebSocketData } from "siyuan";
-
-
-// api/bazaar/getBazaarTheme
-export async function getBazaarTheme(): Promise<ITheme[] | null> {
-    let data = await request('api/bazaar/getBazaarTheme', {});
-    return data?.packages ?? null;
+export async function getBazaarTheme(frontend: string): Promise<ITheme[]> {
+    const response = await fetchSyncPost("/api/bazaar/getBazaarTheme", { frontend });
+    if (response.code !== 0) {
+        throw new Error(response.msg || "Failed to load the theme marketplace");
+    }
+    return response.data?.packages ?? [];
 }
 
-// api/bazaar/installBazaarTheme
-export async function installBazaarTheme(theme: ITheme): Promise<boolean> {
-    let payload = {
-        frontend: "desktop",
-        mode: "light" in theme.modes ? 0 : 1,
-        packageName: theme.name,
+export async function installBazaarTheme(theme: ITheme): Promise<void> {
+    const appearance = window.siyuan.config.appearance;
+    const modes = theme.modes ?? [];
+    const currentMode: ThemeMode = appearance.mode === 0 ? "light" : "dark";
+    const supportsCurrentMode = modes.length === 0 || modes.includes(currentMode);
+    // 与思源集市安装逻辑保持一致：优先安装到当前模式，否则退回到主题支持的模式
+    const mode = supportsCurrentMode ? appearance.mode : (modes.includes("dark") ? 1 : 0);
+    const modeOS = supportsCurrentMode ? appearance.modeOS : false;
+
+    const response = await fetchSyncPost("/api/bazaar/installBazaarTheme", {
+        frontend: getFrontend(),
+        repoURL: theme.repoURL,
         repoHash: theme.repoHash,
-        repoURL: theme.repoURL
+        repoRef: theme.repoRef ?? "",
+        packageName: theme.name,
+        mode,
+        modeOS,
+    });
+    if (response.code !== 0) {
+        throw new Error(response.msg || `Failed to install theme ${theme.name}`);
     }
-    let data = await request('api/bazaar/installBazaarTheme', payload);
-    return data?.success ?? false;
 }
 
-
-export async function request(url: string, data: any) {
-    let response: IWebSocketData = await fetchSyncPost(url, data);
-    let res = response.code === 0 ? response.data : null;
-    return res;
-}
-
-export async function getInstalledTheme(frontend: string) {
-    let data = {
-        frontend: frontend,
+export async function setTheme(theme: string, mode: 0 | 1): Promise<void> {
+    const response = await fetchSyncPost("/api/setting/setTheme", {
+        theme,
+        modes: [mode],
+    });
+    if (response.code !== 0) {
+        throw new Error(response.msg || `Failed to switch to theme ${theme}`);
     }
-    return request('api/bazaar/getInstalledTheme', data);
 }

@@ -3,11 +3,24 @@
  */
 
 type ThemeMode = "light" | "dark";
+
 interface ITheme {
     name: string;
-    modes: ThemeMode[];
+    modes?: string[] | null;
     repoHash: string;
     repoURL: string;
+    repoRef?: string;
+    preferredName?: string;
+    displayName?: Record<string, string> | null;
+    frontends?: string[] | null;
+    installed?: boolean;
+    disallowInstall?: boolean;
+}
+
+interface IAppearanceTheme {
+    name: string;
+    label?: string;
+    frontends?: string[];
 }
 
 /**
@@ -71,9 +84,4 @@ type doOperation = {
     parentID: BlockId | DocumentId;
     previousID: BlockId;
     retData: null;
-}
-
-
-interface Window {
-    destroyTheme: () => void;
 }

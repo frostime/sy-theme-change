@@ -1,6 +1,6 @@
 {
   "name": "sy-theme-change",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "type": "module",
   "description": "",
   "repository": "",
@@ -9,24 +9,20 @@
   "license": "GPL-3.0",
   "scripts": {
     "make-link": "node  --no-warnings ./scripts/make_dev_link.js",
+    "check": "tsc --noEmit -p tsconfig.json",
     "dev": "vite build --watch",
     "build": "vite build"
   },
   "devDependencies": {
-    "@types/node": "^20.2.0",
+    "@types/node": "^20.19.43",
     "fast-glob": "^3.2.12",
-    "glob": "^7.2.3",
     "minimist": "^1.2.8",
     "rollup-plugin-livereload": "^2.0.5",
     "sass": "^1.62.1",
-    "siyuan": "^1.0.3",
-    "ts-node": "^10.9.1",
-    "typescript": "^5.0.4",
-    "vite": "^4.5.2",
+    "siyuan": "^1.2.9",
+    "typescript": "^5.9.3",
+    "vite": "^4.5.14",
     "vite-plugin-static-copy": "^0.15.0",
     "vite-plugin-zip-pack": "^1.0.5"
-  },
-  "dependencies": {
-    "sy-plugin-changelog": "^0.0.7"
   }
 }

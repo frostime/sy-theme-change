@@ -1,17 +1,7 @@
-/*
- * Copyright (c) 2023 by Yp Z (frostime). All Rights Reserved.
- * @Author       : Yp Z
- * @Date         : 2023-09-27 00:34:28
- * @FilePath     : /src/index.ts
- * @LastEditTime : 2024-10-01 14:14:29
- * @Description  : 
- */
 import { Plugin, Menu, getFrontend, showMessage } from "siyuan";
 import { svg } from "./const";
-import { request, getInstalledTheme, getBazaarTheme, installBazaarTheme } from "./api";
+import { getBazaarTheme, installBazaarTheme, setTheme } from "./api";
 import "./index.scss";
-
-// import { changelog } from "sy-plugin-changelog";
 
 declare global {
     interface Window {
@@ -19,124 +9,94 @@ declare global {
     }
 }
 
-
 const SIYUAN = window.siyuan;
-const Lang = SIYUAN.config.lang;
 
-
-class Themes {
-    name2displayName: {[key: string]: string} = {};
-
-    async updateThemes(packages?: any) {
-        this.name2displayName = {};
-
-        if (!packages) {
-            let frontend = getFrontend();
-            packages = (await getInstalledTheme(frontend)).packages;
-        }
-        for (let pkg of packages) {
-            let displayName = pkg.displayName[Lang];
-            if (displayName === undefined || displayName === null || displayName === '') {
-                displayName = pkg.displayName['default'];
-            }
-            // console.debug(pkg.displayName)
-            this.name2displayName[pkg.name] = displayName;
-        }
+function themeDisplayName(theme: ITheme): string {
+    if (theme.preferredName) {
+        return theme.preferredName;
     }
-
-    getDisplayName(name: string) {
-        let displayName = this.name2displayName[name];
-        if (displayName === undefined || displayName === null || displayName === '') {
-            displayName = name;
-        }
-        return displayName;
+    const displayName = theme.displayName;
+    if (!displayName) {
+        return theme.name;
     }
+    const lang = SIYUAN.config.lang;
+    return displayName[lang] || displayName["default"] || displayName["en"] || theme.name;
 }
-
 
 export default class ThemeChangePlugin extends Plugin {
 
-    themes: Themes;
     isMobile: boolean;
-    bazzarThemes: ITheme[] = [];
+    frontend: string;
+    bazaarThemes: ITheme[] = [];
 
-    async onload() {
-        const frontEnd = getFrontend();
-        this.isMobile = frontEnd === "mobile" || frontEnd === "browser-mobile";
-        const topBarElement = this.addTopBar({
+    onload() {
+        this.frontend = getFrontend();
+        this.isMobile = this.frontend === "mobile" || this.frontend === "browser-mobile";
+        getBazaarTheme(this.frontend).then((themes) => {
+            this.bazaarThemes = themes;
+        }).catch((error) => {
+            console.warn("Failed to load the theme marketplace", error);
+        });
+    }
+
+    onLayoutReady() {
+        this.addTopBar({
+            id: "theme-change",
             icon: svg,
-            title: this.i18n.title,
-            callback: () => {
-                this.showThemesMenu(topBarElement.getBoundingClientRect());
+            title: String(this.i18n.title ?? "Theme Change"),
+            position: "right",
+            callback: (event) => {
+                const target = event.currentTarget as HTMLElement;
+                this.showThemesMenu(target.getBoundingClientRect());
             },
-            position: "right"
         });
-        this.themes = new Themes();
-        getBazaarTheme().then((data) => {
-            this.bazzarThemes = data ?? [];
-            this.themes.updateThemes(data);
-            // console.debug(this.bazzarThemes)
-        });
-        // await this.themes.updateThemes();
-        // changelog(this, 'i18n/changelog.md').then((result) => {
-        //     result?.Dialog?.setSize({
-        //         width: "45rem",
-        //         height: "25rem",
-        //     });
-        // });
     }
 
     showThemesMenu(rect: DOMRect) {
-        let menu: Menu = new Menu("ThemeChange");
+        const menu: Menu = new Menu("ThemeChange");
         const appearance = SIYUAN.config.appearance;
-        const mode = appearance.mode === 0 ? 'light' : 'dark';
-        const themes: {name: string; label: string}[] = mode === 'light' ? appearance.lightThemes : appearance.darkThemes;
-        const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
+        const mode: ThemeMode = appearance.mode === 0 ? "light" : "dark";
+        const themes: IAppearanceTheme[] = mode === "light" ? appearance.lightThemes : appearance.darkThemes;
+        const current = mode === "light" ? appearance.themeLight : appearance.themeDark;
 
         //Switch theme
         for (const theme of themes) {
-            let icon = null;
-            if (theme.name === current) {
-                icon = 'iconSelect';
+            if (!this.isThemeCompatible(theme)) {
+                continue;
             }
             menu.addItem({
-                label: this.themes.getDisplayName(theme.name),
-                icon: icon,
+                label: theme.label || theme.name,
+                icon: theme.name === current ? "iconSelect" : undefined,
                 click: () => {
                     this.useTheme(theme.name, mode);
                 }
             });
         }
 
-        const allThemes = Array.from(new Set([...appearance.lightThemes, ...appearance.darkThemes]));
-        // console.debug("All installed themes:", allThemes);
-        menu.addSeparator()
+        menu.addSeparator();
         menu.addItem({
-            label: this.i18n.random,
-            icon: 'iconRefresh',
+            label: String(this.i18n.random ?? "Random"),
+            icon: "iconRefresh",
             click: () => this.random(mode),
         });
 
-        const installedThemeNames = allThemes.map((theme) => theme.name);
+        const installedThemeNames = new Set([
+            ...appearance.lightThemes,
+            ...appearance.darkThemes,
+        ].map((theme: IAppearanceTheme) => theme.name));
 
         //Install theme
         menu.addItem({
-            label: this.i18n.install,
+            label: String(this.i18n.install ?? "Install theme"),
             type: "submenu",
-            submenu: this.bazzarThemes.filter((theme: ITheme) => {
-                return !installedThemeNames.includes(theme.name);
-            }).map((theme: ITheme) => {
-                // console.debug(theme);
-                return {
-                    label: this.themes.getDisplayName(theme.name),
+            submenu: this.bazaarThemes
+                .filter((theme) => !installedThemeNames.has(theme.name) && !theme.disallowInstall)
+                .map((theme) => ({
+                    label: themeDisplayName(theme),
                     click: () => {
-                        installBazaarTheme(theme).then(async (ans) => {
-                            console.info("Install theme", ans);
-                            showMessage(this.i18n.installDone);
-                        });
+                        this.installTheme(theme);
                     }
-                }
-            })
+                }))
         });
         if (this.isMobile) {
             menu.fullscreen();
@@ -149,45 +109,45 @@ export default class ThemeChangePlugin extends Plugin {
         }
     }
 
-    private useTheme(themeName: string, mode: string) {
+    private isThemeCompatible(theme: IAppearanceTheme): boolean {
+        const frontends = theme.frontends;
+        if (!frontends || frontends.length === 0) {
+            return true;
+        }
+        return frontends.includes("all") || frontends.includes(this.frontend);
+    }
+
+    private async installTheme(theme: ITheme) {
+        try {
+            await installBazaarTheme(theme);
+            showMessage(String(this.i18n.installDone ?? "Installed"));
+        } catch (error) {
+            showMessage(error instanceof Error ? error.message : String(error), 6000, "error");
+        }
+    }
+
+    private async useTheme(themeName: string, mode: ThemeMode) {
         const appearance = SIYUAN.config.appearance;
-        const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
+        const current = mode === "light" ? appearance.themeLight : appearance.themeDark;
         if (themeName === current) {
             return;
         }
-        const obj = {
-            ...SIYUAN.config.appearance,
-        };
-        if (mode === 'light') {
-            obj.themeLight = themeName;
-        } else {
-            obj.themeDark = themeName;
-        }
         try {
-            //部分主题在 destroy 时会报错导致无法切换主题
-            globalThis?.destroyTheme && globalThis.destroyTheme();
-        } catch (e) {
-            console.warn("Some error occurred when destroy theme", e);
+            await setTheme(themeName, mode === "light" ? 0 : 1);
+        } catch (error) {
+            showMessage(error instanceof Error ? error.message : String(error), 6000, "error");
         }
-        request('/api/setting/setAppearance', obj).then(() => {
-            // window.location.reload();
-            fetch('/api/ui/reloadUI', { method: 'POST' });
-        });
     }
 
-    private random(mode: string) {
+    private random(mode: ThemeMode) {
         const appearance = SIYUAN.config.appearance;
-        const current = mode === 'light' ? appearance.themeLight : appearance.themeDark;
-        const themes = mode === 'light' ? [...appearance.lightThemes] : [...appearance.darkThemes];
-        for (let i = 0; i < themes.length; i++) {
-            if (themes[i].name === current) {
-                themes.splice(i, 1);
-            }
-        }
-        if (themes.length === 0) {
+        const current = mode === "light" ? appearance.themeLight : appearance.themeDark;
+        const themes: IAppearanceTheme[] = mode === "light" ? appearance.lightThemes : appearance.darkThemes;
+        const candidates = themes.filter((theme) => theme.name !== current && this.isThemeCompatible(theme));
+        if (candidates.length === 0) {
             return;
         }
-        const r = Math.floor(Math.random() * themes.length)
-        this.useTheme(themes[r].name, mode);
+        const theme = candidates[Math.floor(Math.random() * candidates.length)];
+        this.useTheme(theme.name, mode);
     }
 }
