@@ -1,121 +1,95 @@
-import { resolve } from "path"
-import { defineConfig, loadEnv } from "vite"
-import minimist from "minimist"
-import { viteStaticCopy } from "vite-plugin-static-copy"
-import livereload from "rollup-plugin-livereload"
-// import { svelte } from "@sveltejs/vite-plugin-svelte"
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { defineConfig, type Plugin } from "vite";
+import { viteStaticCopy } from "vite-plugin-static-copy";
 import zipPack from "vite-plugin-zip-pack";
-import fg from 'fast-glob';
+import fg from "fast-glob";
+import minimist from "minimist";
 
-const args = minimist(process.argv.slice(2))
-const isWatch = args.watch || args.w || false
-const devDistDir = "./dev"
-const distDir = isWatch ? devDistDir : "./dist"
+import { useLiveReload } from "./scripts/siyuan_live_reload.js";
 
-console.log("isWatch=>", isWatch)
-console.log("distDir=>", distDir)
+const args = minimist(process.argv.slice(2));
+const isWatch = Boolean(args.watch || args.w);
+const isSrcmap = args.sourcemap === "inline";
+const outputDir = isWatch ? "dev" : "dist";
+
+const pluginManifest = JSON.parse(readFileSync(resolve(import.meta.dirname, "plugin.json"), "utf8"));
+const packageImageTargets = [
+    ["icon", "icon.png"],
+    ["preview", "preview.png"],
+].flatMap(([field, legacyName]) => {
+    const fileName = pluginManifest[field] || (existsSync(legacyName) ? legacyName : "");
+    return fileName ? [{ src: `./${fileName}`, dest: "./" }] : [];
+});
+
+console.log("isWatch=>", isWatch);
+console.log("isSrcmap=>", isSrcmap);
+console.log("outputDir=>", outputDir);
 
 export default defineConfig({
     plugins: [
-        // svelte(),
-
         viteStaticCopy({
             targets: [
-                {
-                    src: "./README*.md",
-                    dest: "./",
-                },
-                {
-                    src: "./icon.png",
-                    dest: "./",
-                },
-                {
-                    src: "./preview.png",
-                    dest: "./",
-                },
-                {
-                    src: "./plugin.json",
-                    dest: "./",
-                },
-                {
-                    src: "./src/i18n/**",
-                    dest: "./i18n/",
-                },
+                ...packageImageTargets,
+                { src: "./README*.md", dest: "./" },
+                { src: "./plugin.json", dest: "./" },
+                { src: "./src/i18n/*", dest: "./i18n", rename: { stripBase: true } },
             ],
         }),
     ],
 
-    // https://github.com/vitejs/vite/issues/1930
-    // https://vitejs.dev/guide/env-and-mode.html#env-files
-    // https://github.com/vitejs/vite/discussions/3058#discussioncomment-2115319
-    // 在这里自定义变量
     define: {
-        "process.env.DEV_MODE": `"${isWatch}"`,
+        "process.env.DEV_MODE": JSON.stringify(isWatch),
     },
 
     build: {
-        // 输出路径
-        outDir: distDir,
-        emptyOutDir: !isWatch,
-
-        // 构建后是否生成 source map 文件
-        sourcemap: false,
-
-        // 设置为 false 可以禁用最小化混淆
-        // 或是用来指定是应用哪种混淆器
-        // boolean | 'terser' | 'esbuild'
-        // 不压缩，用于调试
+        outDir: outputDir,
+        target: "es2020",
+        // Production builds are cleaned by scripts/clean.js; watch mode cleans dev once.
+        emptyOutDir: isWatch,
+        sourcemap: isSrcmap ? "inline" : false,
         minify: !isWatch,
 
         lib: {
-            // Could also be a dictionary or array of multiple entry points
-            entry: resolve(__dirname, "src/index.ts"),
-            // the proper extensions will be added
-            fileName: "index",
+            entry: resolve(import.meta.dirname, "src/index.ts"),
+            fileName: () => "index.js",
+            cssFileName: "index",
             formats: ["cjs"],
         },
         rollupOptions: {
-            plugins: [
-                ...(
-                    isWatch ? [
-                        livereload(devDistDir),
-                        {
-                            //监听静态资源文件
-                            name: 'watch-external',
-                            async buildStart() {
-                                const files = await fg([
-                                    'src/i18n/*.json',
-                                    './README*.md',
-                                    './plugin.json'
-                                ]);
-                                for (let file of files) {
-                                    this.addWatchFile(file);
-                                }
-                            }
-                        }
-                    ] : [
-                        zipPack({
-                            inDir: './dist',
-                            outDir: './',
-                            outFileName: 'package.zip'
-                        })
-                    ]
-                )
+            plugins: isWatch ? [
+                useLiveReload({ outputDir }),
+                watchExternalFiles([
+                    "src/i18n/**",
+                    "./README*.md",
+                    "./plugin.json",
+                ]),
+            ] : [
+                zipPack({
+                    inDir: "./dist",
+                    outDir: "./",
+                    outFileName: "package.zip",
+                }),
             ],
 
-            // make sure to externalize deps that shouldn't be bundled
-            // into your library
             external: ["siyuan", "process"],
 
             output: {
                 entryFileNames: "[name].js",
-                assetFileNames: (assetInfo) => {
-                    if (assetInfo.name === "style.css") {
-                        return "index.css"
-                    }
-                    return assetInfo.name
-                },
+                assetFileNames: (assetInfo) => assetInfo.name ?? "asset",
             },
         },
-    }
-})
+    },
+});
+
+function watchExternalFiles(patterns: string[]): Plugin {
+    return {
+        name: "watch-external",
+        async buildStart() {
+            const files = await fg(patterns);
+            for (const file of files) {
+                this.addWatchFile(file);
+            }
+        },
+    };
+}

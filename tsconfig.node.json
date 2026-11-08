@@ -1,12 +1,20 @@
 {
     "compilerOptions": {
-        "composite": true,
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
         "skipLibCheck": true,
-        "module": "ES2015",
-        "moduleResolution": "Node",
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "allowJs": true,
+        "checkJs": true,
+        "noEmit": true,
+        "strict": false,
+        "types": [
+            "node"
+        ]
     },
     "include": [
-        "vite.config.ts"
+        "vite.config.ts",
+        "scripts/siyuan_live_reload.ts"
     ]
 }
